@@ -40,3 +40,15 @@ class GamerCard(models.Model):
 
     def getPrice(self):
         return self.card.rarity * 50
+
+
+class ShopItem(models.Model):
+    price = models.IntegerField("цена", default=1000)
+    discountPrice = models.IntegerField("цена по скидке", default=0)
+    card = models.ForeignKey(Card, on_delete=models.CASCADE, verbose_name='карта')
+
+    def getBuyPrice(self):
+        if self.discountPrice != 0:
+            return self.discountPrice
+        else:
+            return self.price

@@ -9,6 +9,8 @@ urlpatterns = [
     path('cards/', views.GetCardInfoView.as_view()),
     path('free-coins/', views.free_coins),
     path('combine/', views.Combine.as_view()),
-    path('buy/', views.Buy.as_view()),
+    path('buy/', views.BuyRandom.as_view()),
     path('destroy/', views.Destroy.as_view()),
+    path('shop/list', views.ShopList.as_view()),
+    path('shop/buy', views.ShopBuyCard.as_view()),
 ]

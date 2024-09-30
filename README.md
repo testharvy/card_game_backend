@@ -11,4 +11,4 @@ Python 3.7
 ### python manege.py createsuperuser
 
 ## запуск
-### python manege.py runserver
+### python manage.py runserver

@@ -8,9 +8,6 @@ class CardSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-
-
-
 class GamerCardSerializer(serializers.ModelSerializer):
     card_id = serializers.ReadOnlyField(source='card.id')
     title = serializers.ReadOnlyField(source='card.title')
@@ -20,8 +17,6 @@ class GamerCardSerializer(serializers.ModelSerializer):
     class Meta:
       model = GamerCard
       exclude = ['user', 'card']
-
-
 
 
 class GamesSerializer(serializers.ModelSerializer):
@@ -34,3 +29,24 @@ class GamesSerializer(serializers.ModelSerializer):
     def get_cards(self, obj):
         queryset = GamerCard.objects.filter(user=obj)
         return [GamerCardSerializer(m).data for m in queryset]
+
+
+class ShopCardSerializer(serializers.ModelSerializer):
+    lvl = serializers.ReadOnlyField(source='rarity')
+    img = serializers.ReadOnlyField(source='img.url')
+    suit = serializers.ReadOnlyField(source='type.id')
+
+    class Meta:
+      model = Card
+      fields = ['id', 'title', 'lvl', 'img', 'suit']
+
+
+class ShopItemSerializer(serializers.ModelSerializer):
+    card = serializers.SerializerMethodField()
+
+    class Meta:
+      model = ShopItem
+      fields = ['id', 'price', 'discountPrice', 'card']
+
+    def get_card(self, obj):
+        return ShopCardSerializer(obj.card).data

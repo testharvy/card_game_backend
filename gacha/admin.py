@@ -23,3 +23,8 @@ class CardAdmin(admin.ModelAdmin):
 @admin.register(GamerCard)
 class GamerCardAdmin(admin.ModelAdmin):
     list_display = ("id","user", "card")
+
+
+@admin.register(ShopItem)
+class ShopItemAdmin(admin.ModelAdmin):
+    list_display = ("card", "price", "discountPrice")

@@ -1,15 +1,15 @@
-from .models import Card, GamerCard, Gamer
-from .serializers import CardSerializer, GamerCardSerializer, GamesSerializer
+from .models import Card, GamerCard, Gamer, ShopItem
+from .serializers import CardSerializer, GamerCardSerializer, GamesSerializer, ShopItemSerializer
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.exceptions import ValidationError, ParseError
-
-
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, throttle_classes
 from rest_framework.throttling import UserRateThrottle
 import random
+import time
+
 
 class GetCardInfoView(APIView):
     def get(self, request):
@@ -37,11 +37,12 @@ class OncePerHourUserThrottle(UserRateThrottle):
     rate = '1/hour'
 
 @api_view(['POST'])
-# @throttle_classes([OncePerHourUserThrottle])
+@throttle_classes([OncePerHourUserThrottle])
 def free_coins(request):
     gamer = Gamer.objects.get(user=request.user)
-    gamer.coins += 1000;
-    gamer.save();
+    gamer.coins += 500
+    gamer.save()
+    time.sleep(2)
     return Response({"msg":"Теперь у тебя "+ str(gamer.coins) +" монет. Еще бесплатные монеты Ты можешь получить через час.", "coins": gamer.coins})
 
 
@@ -78,7 +79,7 @@ class Combine(APIView):
         return Response({"card": serializer_for_queryset.data})
 
 
-class Buy(APIView):
+class BuyRandom(APIView):
     authentication_classes = [SessionAuthentication, BasicAuthentication, TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
@@ -96,6 +97,33 @@ class Buy(APIView):
         gamer.save();
         serializer_for_queryset = GamerCardSerializer(instance=newGamerCard )
         return Response( {"coins": gamer.coins, "card": serializer_for_queryset.data})
+
+
+class ShopList(APIView):
+    def get(self, request, *args, **kwargs):
+        cards = ShopItem.objects.all()
+        serializer_for_queryset = ShopItemSerializer(instance=cards, many=True )
+        return Response({'list': serializer_for_queryset.data})
+
+
+class ShopBuyCard(APIView):
+    authentication_classes = [SessionAuthentication, BasicAuthentication, TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        # raise ValidationError({"msg":"тест ошибки"})
+        gamer = Gamer.objects.get(user=request.user)
+        shopItem = ShopItem.objects.get(id=request.data['id'])
+
+        itemPrice = shopItem.getBuyPrice()
+        if(gamer.coins<itemPrice):
+            raise ValidationError({"msg": "Недостаточно средств"})
+
+        gamer.coins = gamer.coins - itemPrice
+        gamer.save()
+        newGamerCard = GamerCard.objects.create(user=gamer, card=shopItem.card)
+        serializer_for_queryset = GamerCardSerializer(instance=newGamerCard)
+        return Response({"coins": gamer.coins, "card": serializer_for_queryset.data})
 
 
 class Destroy(APIView):
